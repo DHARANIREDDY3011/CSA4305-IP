@@ -1,0 +1,293 @@
+```html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SkyBook - Flight Reservation</title>
+<style>
+*{box-sizing:border-box}
+body{margin:0;font-family:Arial,sans-serif;background:#f1f5f9;color:#172033}
+header{background:#173b72;color:white;text-align:center;padding:22px}
+nav{background:#0b2447;padding:12px;display:flex;justify-content:center;flex-wrap:wrap;gap:8px}
+button{background:#1677c8;color:white;border:0;padding:10px 14px;border-radius:6px;cursor:pointer}
+nav button{background:white;color:#173b72}
+button:hover{opacity:.85}
+main{max-width:1000px;margin:25px auto;padding:15px}
+.panel{background:white;padding:22px;border-radius:12px;box-shadow:0 3px 12px #ccd5df;margin-bottom:20px}
+input,select,textarea{width:100%;padding:11px;margin:7px 0 14px;border:1px solid #cbd5e1;border-radius:5px}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:12px}
+.hidden{display:none}
+.flight{border:1px solid #cbd5e1;border-radius:8px;padding:15px;margin:12px 0}
+h2{color:#173b72}
+footer{text-align:center;padding:20px;color:#64748b}
+</style>
+</head>
+<body>
+<header>
+<h1>✈ SkyBook</h1>
+<p>Discover destinations. Book your journey.</p>
+</header>
+<nav>
+<button onclick="showPage('home')">Home</button>
+<button onclick="showPage('login')">Login</button>
+<button onclick="showPage('search')">Search Flights</button>
+<button onclick="showPage('myTickets')">My Tickets</button>
+<button onclick="showPage('status')">Booking Status</button>
+<button onclick="showPage('cancel')">Cancel Ticket</button>
+<button onclick="showPage('feedback')">Feedback</button>
+<button onclick="showPage('admin')">Admin Report</button>
+</nav>
+
+<main>
+<section id="home" class="panel">
+<h2>Welcome to SkyBook</h2>
+<p>Search flights, compare sample fares and book your next trip.</p>
+<button onclick="showPage('search')">Search Flights</button>
+</section>
+
+<section id="login" class="panel hidden">
+<h2>Customer / Administrator Login</h2>
+<label>Email</label><input id="email" type="email" placeholder="Email address">
+<label>Password</label><input id="password" type="password" placeholder="Password">
+<label>Role</label><select id="role"><option value="customer">Customer</option><option value="admin">Administrator (Demo)</option></select>
+<button onclick="login()">Login / Register</button>
+<p id="loginMsg"></p>
+<p>Forgot password? <button onclick="forgotPassword()">Reset Demo Password</button></p>
+</section>
+
+<section id="search" class="panel hidden">
+<h2>Search Flights</h2>
+<div class="grid">
+<div><label>From</label><select id="from"><option>Chennai</option><option>Mumbai</option><option>Delhi</option><option>Bengaluru</option></select></div>
+<div><label>Destination</label><select id="to"><option>Mumbai</option><option>Delhi</option><option>Chennai</option><option>Bengaluru</option></select></div>
+<div><label>Travel Date</label><input id="date" type="date"></div>
+<div><label>Travel Class</label><select id="travelClass"><option>Economy</option><option>Business</option><option>First Class</option></select></div>
+</div>
+<button onclick="searchFlights()">Search Flights</button>
+<div id="flightResults"></div>
+</section>
+
+<section id="book" class="panel hidden">
+<h2>Book Flight Ticket</h2>
+<p id="chosenFlight"></p>
+<label>Passenger Name</label><input id="passenger" placeholder="Full name">
+<label>Passenger Age</label><input id="age" type="number" min="1" max="120">
+<label>Seat Preference</label><select id="seat"><option>Window</option><option>Aisle</option><option>Middle</option></select>
+<button onclick="goPayment()">Continue to Payment</button>
+</section>
+
+<section id="payment" class="panel hidden">
+<h2>Ticket Payment</h2>
+<p id="paymentInfo"></p>
+<label>Payment Mode</label><select id="payMode"><option>Card (Demo)</option><option>UPI (Demo)</option><option>Offline</option></select>
+<button onclick="confirmBooking()">Pay and Confirm (Demo)</button>
+<p id="paymentMsg"></p>
+</section>
+
+<section id="myTickets" class="panel hidden">
+<h2>My Tickets</h2><div id="ticketList"></div>
+</section>
+
+<section id="status" class="panel hidden">
+<h2>View Booking Status</h2>
+<label>Booking Reference</label><input id="statusInput" placeholder="Enter booking reference">
+<button onclick="checkStatus()">Check Status</button>
+<p id="statusResult"></p>
+</section>
+
+<section id="cancel" class="panel hidden">
+<h2>Cancel Ticket</h2>
+<label>Booking Reference</label><input id="cancelInput" placeholder="Enter booking reference">
+<button onclick="cancelTicket()">Cancel Ticket</button>
+<p id="cancelMsg"></p>
+</section>
+
+<section id="feedback" class="panel hidden">
+<h2>Customer Feedback</h2>
+<label>Your Name</label><input id="feedbackName" placeholder="Name">
+<label>Rating</label><select id="rating"><option>5 - Excellent</option><option>4 - Very Good</option><option>3 - Good</option><option>2 - Average</option><option>1 - Poor</option></select>
+<label>Comments</label><textarea id="comments" rows="4" placeholder="Share your experience"></textarea>
+<button onclick="sendFeedback()">Submit Feedback</button>
+<p id="feedbackMsg"></p>
+</section>
+
+<section id="admin" class="panel hidden">
+<h2>Admin Report</h2>
+<p>Sample booking report for the demonstration.</p>
+<button onclick="showAdmin()">View Report</button>
+<div id="adminReport"></div>
+</section>
+</main>
+<footer>SkyBook | Internet Programming Lab Experiment 5</footer>
+
+<script>
+let currentUser="";
+let currentRole="customer";
+let selectedFlight=null;
+let bookings=JSON.parse(localStorage.getItem("skyBookings")||"[]");
+let feedbacks=JSON.parse(localStorage.getItem("skyFeedback")||"[]");
+
+function showPage(id){
+ document.querySelectorAll("main section").forEach(s=>s.classList.add("hidden"));
+ document.getElementById(id).classList.remove("hidden");
+ if(id==="myTickets")showTickets();
+ if(id==="admin")showAdmin();
+}
+
+function login(){
+ const email=document.getElementById("email").value.trim();
+ const password=document.getElementById("password").value;
+ if(!email||!password){alert("Enter email and password.");return;}
+ currentUser=email;
+ currentRole=document.getElementById("role").value;
+ document.getElementById("loginMsg").textContent="Demo login successful as "+currentRole+".";
+ alert("Login successful (demo).");
+ showPage("search");
+}
+
+function forgotPassword(){
+ const email=document.getElementById("email").value.trim();
+ if(!email){alert("Enter your email first.");return;}
+ alert("Demo password reset requested for "+email+". No email was sent.");
+}
+
+function searchFlights(){
+ const from=document.getElementById("from").value;
+ const to=document.getElementById("to").value;
+ const date=document.getElementById("date").value;
+ if(from===to){alert("Choose different origin and destination.");return;}
+ if(!date){alert("Please select a travel date.");return;}
+ const flights=[
+ {code:"SB101",name:"Sky Express",from:"Chennai",to:"Mumbai",time:"07:30 AM",fare:4500},
+ {code:"SB202",name:"Air Connect",from:"Chennai",to:"Delhi",time:"10:15 AM",fare:5200},
+ {code:"SB303",name:"Blue Wings",from:"Mumbai",to:"Delhi",time:"01:00 PM",fare:3900},
+ {code:"SB404",name:"Cloud Air",from:"Bengaluru",to:"Chennai",time:"06:45 PM",fare:2800},
+ {code:"SB505",name:"Sky Express",from:"Delhi",to:"Chennai",time:"09:00 PM",fare:5600},
+ {code:"SB606",name:"Air Connect",from:"Chennai",to:"Bengaluru",time:"04:00 PM",fare:2500}
+ ];
+ const matches=flights.filter(f=>f.from===from&&f.to===to);
+ window.flightMatches=matches;
+ const result=document.getElementById("flightResults");
+ result.innerHTML="";
+ if(!matches.length){result.innerHTML="<p>No sample flights found for this route.</p>";return;}
+ matches.forEach(f=>{
+ result.innerHTML+=`<div class="flight"><h3>${f.name} (${f.code})</h3>
+ <p>${f.from} → ${f.to}</p><p>Departure: ${f.time}</p>
+ <p>Class: ${document.getElementById("travelClass").value}</p>
+ <p>Sample seats available: 18 | Sample fare: ₹${f.fare}</p>
+ <button onclick="chooseFlight('${f.code}')">Book Flight</button></div>`;
+ });
+}
+
+function chooseFlight(code){
+ if(!currentUser){alert("Please log in before booking.");showPage("login");return;}
+ selectedFlight=window.flightMatches.find(f=>f.code===code);
+ document.getElementById("chosenFlight").textContent=
+ selectedFlight.name+" | "+selectedFlight.from+" to "+selectedFlight.to+
+ " | ₹"+selectedFlight.fare;
+ showPage("book");
+}
+
+function goPayment(){
+ const name=document.getElementById("passenger").value.trim();
+ const age=Number(document.getElementById("age").value);
+ if(!name||!age||age<1||age>120){alert("Enter valid passenger details.");return;}
+ if(!selectedFlight){alert("Please select a flight first.");return;}
+ document.getElementById("paymentInfo").textContent=
+ "Passenger: "+name+" | Flight: "+selectedFlight.code+
+ " | Class: "+document.getElementById("travelClass").value+
+ " | Total: ₹"+selectedFlight.fare;
+ showPage("payment");
+}
+
+function confirmBooking(){
+ if(!selectedFlight||!currentUser){alert("Please log in and select a flight.");return;}
+ const ref="SB"+Math.floor(100000+Math.random()*900000);
+ const booking={
+ ref,email:currentUser,passenger:document.getElementById("passenger").value.trim(),
+ age:document.getElementById("age").value,flight:selectedFlight.name,
+ code:selectedFlight.code,from:selectedFlight.from,to:selectedFlight.to,
+ date:document.getElementById("date").value,
+ travelClass:document.getElementById("travelClass").value,
+ seat:document.getElementById("seat").value,fare:selectedFlight.fare,
+ payment:document.getElementById("payMode").value,status:"Confirmed"
+ };
+ bookings.push(booking);
+ localStorage.setItem("skyBookings",JSON.stringify(bookings));
+ document.getElementById("paymentMsg").innerHTML=
+ "Booking confirmed! Reference: <b>"+ref+"</b><br>Passenger: "+
+ booking.passenger+"<br><button onclick='printTicket(\""+ref+"\")'>Print Ticket</button>";
+}
+
+function showTickets(){
+ const mine=bookings.filter(b=>b.email===currentUser);
+ document.getElementById("ticketList").innerHTML=mine.length?
+ mine.map(ticketHTML).join(""):"<p>Please log in and book a flight to view your tickets.</p>";
+}
+
+function ticketHTML(b){
+ return `<div class="flight"><h3>${b.flight} (${b.code})</h3>
+ <p>${b.from} → ${b.to} | Date: ${b.date}</p>
+ <p>Passenger: ${b.passenger} | Age: ${b.age}</p>
+ <p>Class: ${b.travelClass} | Seat preference: ${b.seat}</p>
+ <p>Fare: ₹${b.fare} | Ref: <b>${b.ref}</b></p>
+ <p>Status: ${b.status}</p>
+ <button onclick="printTicket('${b.ref}')">Print Ticket</button></div>`;
+}
+
+function printTicket(ref){
+ const b=bookings.find(x=>x.ref===ref);
+ if(!b)return;
+ const w=window.open("","_blank");
+ if(!w){alert("Allow pop-ups to print the ticket.");return;}
+ w.document.write("<h1>SkyBook E-Ticket</h1>"+ticketHTML(b));
+ w.document.close();w.print();
+}
+
+function checkStatus(){
+ const ref=document.getElementById("statusInput").value.trim();
+ const b=bookings.find(x=>x.ref===ref);
+ document.getElementById("statusResult").textContent=b?
+ "Flight: "+b.flight+" | Passenger: "+b.passenger+" | Status: "+b.status:
+ "Booking reference not found.";
+}
+
+function cancelTicket(){
+ const ref=document.getElementById("cancelInput").value.trim();
+ const b=bookings.find(x=>x.ref===ref);
+ const msg=document.getElementById("cancelMsg");
+ if(!b){msg.textContent="Booking reference not found.";return;}
+ if(b.status==="Cancelled"){msg.textContent="Ticket is already cancelled.";return;}
+ b.status="Cancelled";
+ localStorage.setItem("skyBookings",JSON.stringify(bookings));
+ msg.textContent="Ticket cancelled. Refund processing is not connected in this demo.";
+}
+
+function sendFeedback(){
+ const name=document.getElementById("feedbackName").value.trim();
+ const comments=document.getElementById("comments").value.trim();
+ if(!name||!comments){alert("Enter your name and comments.");return;}
+ feedbacks.push({name,rating:document.getElementById("rating").value,comments});
+ localStorage.setItem("skyFeedback",JSON.stringify(feedbacks));
+ document.getElementById("feedbackMsg").textContent="Thank you! Feedback saved in this browser.";
+ document.getElementById("feedbackName").value="";
+ document.getElementById("comments").value="";
+}
+
+function showAdmin(){
+ if(currentRole!=="admin"){
+ document.getElementById("adminReport").innerHTML="<p>Demo admin role required. Open Login and choose Administrator.</p>";
+ return;
+ }
+ document.getElementById("adminReport").innerHTML=
+ "<p>Total bookings: "+bookings.length+"</p>"+
+ "<p>Confirmed tickets: "+bookings.filter(b=>b.status==="Confirmed").length+"</p>"+
+ "<p>Cancelled tickets: "+bookings.filter(b=>b.status==="Cancelled").length+"</p>"+
+ "<p>Feedback entries: "+feedbacks.length+"</p>"+
+ bookings.map(ticketHTML).join("");
+}
+</script>
+</body>
+</html>
+```

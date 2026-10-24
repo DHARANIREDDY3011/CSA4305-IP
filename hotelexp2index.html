@@ -1,0 +1,243 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>StayEase | Hotel Booking System</title>
+<style>
+*{box-sizing:border-box}
+body{margin:0;font-family:Arial,sans-serif;background:#f3f6fa;color:#243047}
+header{background:#153b55;color:white;padding:22px 6%;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap}
+header h1{margin:0}
+header p{margin:8px 0 0}
+nav{display:flex;flex-wrap:wrap;gap:8px;background:white;padding:14px 5%;box-shadow:0 2px 8px #0001}
+button{background:#087f8c;color:white;border:0;border-radius:5px;padding:11px 15px;cursor:pointer;margin:3px}
+button:hover{background:#05636d}
+input,select,textarea{width:100%;padding:11px;margin:7px 0 13px;border:1px solid #cbd5e1;border-radius:5px;font:inherit}
+main{max-width:1100px;margin:25px auto;padding:0 15px}
+.page{background:white;border-radius:10px;padding:24px}
+.hidden{display:none}
+h2{color:#153b55}
+.hero{background:#e1f3f2;padding:24px;border-radius:10px;margin-bottom:20px}
+.formgrid,.rooms{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:15px}
+.card{border:1px solid #dbe3ed;border-radius:9px;padding:18px;background:#fff}
+.card h3{color:#153b55}
+.price{font-size:22px;color:#087f8c;font-weight:bold}
+.room-icon{font-size:38px}
+button.danger{background:#bd3545}
+button:disabled{background:#999;cursor:not-allowed}
+footer{background:#153b55;color:white;text-align:center;padding:20px;margin-top:30px}
+@media(max-width:600px){header{gap:12px}.page{padding:16px}}
+</style>
+</head>
+<body>
+<header>
+  <div><h1>🏨 StayEase</h1><p>Find your perfect stay</p></div>
+  <span>Hotel Reservation Portal</span>
+</header>
+<nav>
+  <button onclick="showPage('home')">Home</button>
+  <button onclick="showPage('roomsPage')">Rooms</button>
+  <button onclick="showPage('bookingsPage')">My Bookings</button>
+  <button onclick="showPage('profilePage')">My Profile</button>
+  <button onclick="showPage('adminPage')">Admin Panel</button>
+  <button onclick="showPage('infoPage')">Hotel Information</button>
+</nav>
+<main>
+<section id="home" class="page">
+  <div class="hero">
+    <h2>Book Your Comfortable Stay</h2>
+    <p>Search available rooms, compare prices and make a reservation.</p>
+  </div>
+  <h2>Search Rooms</h2>
+  <div class="formgrid">
+    <div><label>Destination</label><input id="destination" placeholder="City or hotel name"></div>
+    <div><label>Check-in</label><input id="checkin" type="date"></div>
+    <div><label>Check-out</label><input id="checkout" type="date"></div>
+    <div><label>Guests</label><select id="guests"><option>1</option><option selected>2</option><option>3</option><option>4</option></select></div>
+  </div>
+  <button onclick="searchRooms()">Check Availability</button>
+  <div id="searchMessage"></div>
+  <div id="homeRooms" class="rooms"></div>
+</section>
+
+<section id="roomsPage" class="page hidden">
+  <h2>Available Rooms</h2>
+  <div id="roomList" class="rooms"></div>
+</section>
+
+<section id="bookingsPage" class="page hidden">
+  <h2>My Booking History</h2>
+  <div id="bookingList"></div>
+</section>
+
+<section id="profilePage" class="page hidden">
+  <h2>User Registration / Profile</h2>
+  <label>Full Name</label><input id="userName" placeholder="Enter your name">
+  <label>Email</label><input id="userEmail" type="email" placeholder="Enter your email">
+  <label>Phone Number</label><input id="userPhone" placeholder="Enter phone number">
+  <button onclick="saveProfile()">Save Profile</button>
+  <p id="profileMessage"></p>
+</section>
+
+<section id="adminPage" class="page hidden">
+  <h2>Admin Panel — Demo</h2>
+  <p>Manage room quantity, room prices and bookings.</p>
+  <label>Room Type</label>
+  <select id="adminRoom">
+    <option value="0">Standard Room</option>
+    <option value="1">Deluxe Room</option>
+    <option value="2">Family Suite</option>
+    <option value="3">Executive Suite</option>
+  </select>
+  <label>Price per Night (₹)</label><input id="adminPrice" type="number" min="1">
+  <label>Total Rooms</label><input id="adminQuantity" type="number" min="1">
+  <button onclick="updateRoom()">Update Room Details</button>
+  <h3>All Reservations</h3><div id="adminBookings"></div>
+</section>
+
+<section id="infoPage" class="page hidden">
+  <h2>About StayEase</h2>
+  <p>StayEase is a sample hotel reservation website created for an Internet Programming lab.</p>
+  <h3>Contact Us</h3>
+  <p>Email: support@stayease.example</p>
+  <p>Phone: 9876543210</p>
+  <h3>Customer Service FAQs</h3>
+  <p><b>Q: Can I cancel a booking?</b><br>A: Demo bookings can be cancelled at least three days before check-in.</p>
+  <p><b>Q: Are payments processed?</b><br>A: No. This student demonstration does not process real payments.</p>
+  <h3>Privacy Policy</h3>
+  <p>This demo stores sample booking and profile data in your browser only. Do not enter sensitive personal information.</p>
+  <h3>Travel Guide</h3>
+  <p>Check local transport, destination attractions and hotel facilities before travelling.</p>
+</section>
+</main>
+<footer><p>Internet Programming Lab — Experiment 2</p><p>StayEase Hotel Booking System</p></footer>
+
+<script>
+const initialRooms=[
+ {name:"Standard Room",price:1800,total:5,icon:"🛏️",description:"Comfortable room with Wi-Fi and air conditioning."},
+ {name:"Deluxe Room",price:2800,total:4,icon:"🛎️",description:"Spacious room with a premium interior."},
+ {name:"Family Suite",price:4200,total:3,icon:"🏨",description:"Large room suitable for family stays."},
+ {name:"Executive Suite",price:6000,total:2,icon:"✨",description:"Premium suite with extra comfort."}
+];
+function load(key,fallback){try{const x=localStorage.getItem(key);return x?JSON.parse(x):fallback}catch{return fallback}}
+let rooms=load("hotelRooms",initialRooms);
+let bookings=load("hotelBookings",[]);
+function save(){localStorage.setItem("hotelRooms",JSON.stringify(rooms));localStorage.setItem("hotelBookings",JSON.stringify(bookings))}
+function safe(v){return String(v).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]))}
+function dateValue(id){return document.getElementById(id).value}
+function showPage(id){
+ document.querySelectorAll(".page").forEach(p=>p.classList.add("hidden"));
+ document.getElementById(id).classList.remove("hidden");
+ if(id==="roomsPage")renderRooms();
+ if(id==="bookingsPage")renderBookings();
+ if(id==="adminPage")renderAdmin();
+}
+function getDates(){
+ const start=dateValue("checkin"),end=dateValue("checkout");
+ if(!start||!end||end<=start){alert("Choose a valid check-in and check-out date.");return null}
+ const today=new Date();today.setHours(0,0,0,0);
+ if(new Date(start+"T00:00:00")<today){alert("Check-in cannot be in the past.");return null}
+ return {start,end,nights:Math.round((new Date(end+"T00:00:00")-new Date(start+"T00:00:00"))/86400000)}
+}
+function availableCount(index,start,end){
+ const occupied=bookings.filter(b=>b.roomIndex===index&&b.status==="Confirmed"&&b.checkin<end&&b.checkout>start).length;
+ return Math.max(0,rooms[index].total-occupied);
+}
+function roomCard(r,i,dates){
+ const count=dates?availableCount(i,dates.start,dates.end):r.total;
+ return `<div class="card"><div class="room-icon">${r.icon}</div><h3>${safe(r.name)}</h3><p>${safe(r.description)}</p><p class="price">₹${r.price} / night</p><p>Available for selected dates: ${count}</p><button onclick="bookRoom(${i})" ${count===0?"disabled":""}>Book Now</button></div>`;
+}
+function renderRooms(){
+ document.getElementById("roomList").innerHTML=rooms.map((r,i)=>roomCard(r,i,null)).join("");
+}
+function searchRooms(){
+ const dates=getDates();if(!dates)return;
+ document.getElementById("searchMessage").textContent="Showing rooms for "+dates.start+" to "+dates.end+" ("+dates.nights+" nights).";
+ document.getElementById("homeRooms").innerHTML=rooms.map((r,i)=>roomCard(r,i,dates)).join("");
+}
+function bookRoom(i){
+ const dates=getDates();if(!dates)return;
+ if(availableCount(i,dates.start,dates.end)<1){alert("No room available for those dates.");searchRooms();return}
+ const profile=load("hotelProfile",null);
+ const name=profile?.name||prompt("Enter guest name:");
+ if(!name||!name.trim())return;
+ const email=profile?.email||prompt("Enter guest email:");
+ if(!email||!email.trim())return;
+ const guests=Number(document.getElementById("guests").value);
+ const total=rooms[i].price*dates.nights;
+ const booking={id:Date.now(),roomIndex:i,room:rooms[i].name,name:name.trim(),email:email.trim(),guests,checkin:dates.start,checkout:dates.end,nights:dates.nights,total,status:"Confirmed"};
+ bookings.push(booking);save();
+ alert("Booking confirmed! Total: ₹"+total);
+ searchRooms();renderBookings();
+}
+function renderBookings(){
+ const box=document.getElementById("bookingList");
+ if(!bookings.length){box.innerHTML="<p>No bookings yet. Search and book a room first.</p>";return}
+ box.innerHTML=[...bookings].reverse().map(b=>`
+ <div class="card"><h3>${safe(b.room)}</h3><p>Guest: ${safe(b.name)}</p><p>Check-in: ${b.checkin}</p><p>Check-out: ${b.checkout}</p><p>Guests: ${b.guests}</p><p>Total: ₹${b.total}</p><p>Status: ${b.status}</p>
+ ${b.status==="Confirmed"?`<button onclick="changeBooking(${b.id})">Modify Dates</button><button class="danger" onclick="cancelBooking(${b.id})">Cancel Booking</button>`:""}
+ </div>`).join("");
+}
+function canChange(b){
+ const today=new Date();today.setHours(0,0,0,0);
+ const arrival=new Date(b.checkin+"T00:00:00");
+ return Math.round((arrival-today)/86400000)>=3;
+}
+function changeBooking(id){
+ const b=bookings.find(x=>x.id===id);if(!b||b.status!=="Confirmed")return;
+ if(!canChange(b)){alert("Changes are allowed at least 3 days before arrival.");return}
+ const start=prompt("Enter new check-in date (YYYY-MM-DD):",b.checkin);if(!start)return;
+ const end=prompt("Enter new check-out date (YYYY-MM-DD):",b.checkout);if(!end)return;
+ if(end<=start||new Date(start+"T00:00:00")<new Date(new Date().toDateString())){alert("Enter valid future dates.");return}
+ const occupied=bookings.filter(x=>x.id!==id&&x.roomIndex===b.roomIndex&&x.status==="Confirmed"&&x.checkin<end&&x.checkout>start).length;
+ if(rooms[b.roomIndex].total-occupied<1){alert("No room available for those dates.");return}
+ b.checkin=start;b.checkout=end;
+ b.nights=Math.round((new Date(end+"T00:00:00")-new Date(start+"T00:00:00"))/86400000);
+ b.total=rooms[b.roomIndex].price*b.nights;save();renderBookings();alert("Booking updated.");
+}
+function cancelBooking(id){
+ const b=bookings.find(x=>x.id===id);if(!b||b.status!=="Confirmed")return;
+ if(!canChange(b)){alert("Cancellation is allowed at least 3 days before arrival.");return}
+ if(confirm("Cancel this booking?")){b.status="Cancelled";save();renderBookings();alert("Booking cancelled.");}
+}
+function saveProfile(){
+ const name=document.getElementById("userName").value.trim();
+ const email=document.getElementById("userEmail").value.trim();
+ const phone=document.getElementById("userPhone").value.trim();
+ if(!name||!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)){alert("Enter a name and valid email.");return}
+ localStorage.setItem("hotelProfile",JSON.stringify({name,email,phone}));
+ document.getElementById("profileMessage").textContent="Profile saved successfully.";
+}
+function updateRoom(){
+ const i=Number(document.getElementById("adminRoom").value);
+ const price=Number(document.getElementById("adminPrice").value);
+ const quantity=Number(document.getElementById("adminQuantity").value);
+ const active=bookings.filter(b=>b.roomIndex===i&&b.status==="Confirmed").length;
+ if(!Number.isFinite(price)||price<1||!Number.isInteger(quantity)||quantity<active){alert("Enter a valid price and a quantity not below existing confirmed bookings.");return}
+ rooms[i].price=price;rooms[i].total=quantity;save();renderAdmin();renderRooms();alert("Room details updated.");
+}
+function renderAdmin(){
+ document.getElementById("adminBookings").innerHTML=bookings.length?bookings.map(b=>`<div class="card"><p>${safe(b.name)} — ${safe(b.room)} — ₹${b.total} — ${b.status}</p>${b.status==="Confirmed"?`<button class="danger" onclick="adminCancel(${b.id})">Cancel Reservation</button>`:""}</div>`).join(""):"<p>No reservations yet.</p>";
+}
+function adminCancel(id){
+ const b=bookings.find(x=>x.id===id);if(b&&b.status==="Confirmed"&&confirm("Admin: cancel this reservation?")){b.status="Cancelled";save();renderAdmin();renderBookings();}
+}
+function loadProfile(){
+ const p=load("hotelProfile",null);if(!p)return;
+ document.getElementById("userName").value=p.name;
+ document.getElementById("userEmail").value=p.email;
+ document.getElementById("userPhone").value=p.phone||"";
+}
+const today=new Date();today.setMinutes(today.getMinutes()-today.getTimezoneOffset());
+document.getElementById("checkin").min=today.toISOString().slice(0,10);
+document.getElementById("checkout").min=today.toISOString().slice(0,10);
+document.getElementById("checkin").addEventListener("change",()=>{
+ document.getElementById("checkout").min=dateValue("checkin");
+ if(dateValue("checkout")<=dateValue("checkin"))document.getElementById("checkout").value="";
+});
+loadProfile();renderRooms();renderAdmin();
+</script>
+</body>
+</html>
